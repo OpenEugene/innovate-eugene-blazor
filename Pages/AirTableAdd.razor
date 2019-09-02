@@ -1,0 +1,87 @@
+﻿@page "/AirTableAdd"
+@inject HttpClient Http
+@inject IUriHelper UriHelper
+
+<h1>Add Asset</h1>
+
+
+<RadzenCard>
+    <div class="row">
+        <div class="col-md-6">
+            <h3>New Asset</h3>
+            <RadzenFieldset Style="width:600px;margin-bottom: 20px; height:500px;">
+                <HeaderTemplate>
+                    <span>
+                        <RadzenIcon Icon="account_box" /><b style="font-size:30px">ASSET</b>
+                    </span>
+                    <span>
+                        <RadzenButton Click=@Click Text="Add" />
+                    </span>
+                </HeaderTemplate>
+                <ChildContent>
+                    <RadzenCard Style="width:300px;height:300px">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div>Name:</div>
+                                <RadzenTextBox Style="margin-bottom: 20px" @bind-Value ="@asset.Name"/>
+                            </div>
+                        </div>
+                    </RadzenCard>
+                </ChildContent>
+            </RadzenFieldset>
+        </div>
+    </div>
+</RadzenCard>
+
+@code {
+
+    protected class Asset
+    {
+        public string Name { get; set; }
+        public string AssetType { get; set; }
+        public string Address { get; set; }
+    }
+
+    readonly string baseId = "appiPhOBADo9NMICo";
+    readonly string appKey = "keyTrKPGVY60FdpzC";
+
+    protected Asset asset = new Asset();
+
+
+    async void Click()
+    {
+        using (AirtableBase airtableBase = new AirtableBase(appKey, baseId))
+        {
+            var fields = new Fields();
+            fields.AddField("Name", asset.Name);
+
+            Task<AirtableCreateUpdateReplaceRecordResponse> task = airtableBase.CreateRecord("Assets", fields, true);
+            var response = await task;
+
+            if (!response.Success)
+            {
+                string errorMessage = null;
+                if (response.AirtableApiError is AirtableApiException)
+                {
+                    errorMessage = response.AirtableApiError.ErrorMessage;
+                }
+                else
+                {
+                    errorMessage = "Unknown error";
+                }
+                // Report errorMessage
+            }
+            else
+            {
+                var record = response.Record;
+                // Do something with your created record.
+                UriHelper.NavigateTo("/AirTableFetch");
+
+            }
+
+
+
+        }
+    }
+
+}

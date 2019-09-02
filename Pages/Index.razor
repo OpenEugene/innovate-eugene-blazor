@@ -2,8 +2,15 @@
 
 <h1>Welcome to Innovate Eugene!</h1>
 
-this is going to be a great place to see innivation assets and add new ones. 
+<div>this is going to be a great place to see innivation assets and add new ones. </div>
 
-<RadzenButton Text="Hi"></RadzenButton> 
+<RadzenButton Text="@text" Click="@ButtonClicked"></RadzenButton> 
+@code {
+  string text = "OK";
+  void ButtonClicked()
+  {
+    text = text == "OK" ? "Cancel" : "OK";
+  }
+}
 
 
