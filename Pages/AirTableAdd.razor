@@ -1,69 +1,87 @@
 ﻿@page "/AirTableAdd"
 @inject HttpClient Http
+@inject IUriHelper UriHelper
 
-<h1>AitTable Data</h1>
+<h1>Add Asset</h1>
 
-<p>This component demonstrates fetching data from AirTable.</p>
 
-@if (records == null)
-{
-    <p><em>Fetching...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Asset Type</th>
-                <th>Address</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var record in records)
-            {
-            <tr>
-                <td>@record.GetField("Name")</td>
-                <td>@record.GetField("Asset Type")</td>
-                <td>@record.GetField("Address")</td>
-            </tr>
-            }
-        </tbody>
-    </table>
-}
+<RadzenCard>
+    <div class="row">
+        <div class="col-md-6">
+            <h3>New Asset</h3>
+            <RadzenFieldset Style="width:600px;margin-bottom: 20px; height:500px;">
+                <HeaderTemplate>
+                    <span>
+                        <RadzenIcon Icon="account_box" /><b style="font-size:30px">ASSET</b>
+                    </span>
+                    <span>
+                        <RadzenButton Click=@Click Text="Add" />
+                    </span>
+                </HeaderTemplate>
+                <ChildContent>
+                    <RadzenCard Style="width:300px;height:300px">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div>Name:</div>
+                                <RadzenTextBox Style="margin-bottom: 20px" @bind-Value ="@asset.Name"/>
+                            </div>
+                        </div>
+                    </RadzenCard>
+                </ChildContent>
+            </RadzenFieldset>
+        </div>
+    </div>
+</RadzenCard>
 
 @code {
+
+    protected class Asset
+    {
+        public string Name { get; set; }
+        public string AssetType { get; set; }
+        public string Address { get; set; }
+    }
 
     readonly string baseId = "appiPhOBADo9NMICo";
     readonly string appKey = "keyTrKPGVY60FdpzC";
 
-    List<AirtableRecord> records = new List<AirtableRecord>();
-    
+    protected Asset asset = new Asset();
 
-     protected override async Task OnInitializedAsync()
+
+    async void Click()
     {
-        string offset = null;
-        string errorMessage = null;
-       
-
         using (AirtableBase airtableBase = new AirtableBase(appKey, baseId))
         {
-            Task<AirtableListRecordsResponse> task = airtableBase.ListRecords("Assets");
-            AirtableListRecordsResponse response = await task;
+            var fields = new Fields();
+            fields.AddField("Name", asset.Name);
 
-            if (response.Success)
+            Task<AirtableCreateUpdateReplaceRecordResponse> task = airtableBase.CreateRecord("Assets", fields, true);
+            var response = await task;
+
+            if (!response.Success)
             {
-                records.AddRange(response.Records.ToList());
-                offset = response.Offset;
-            }
-            else if (response.AirtableApiError is AirtableApiException)
-            {
-                errorMessage = response.AirtableApiError.ErrorMessage;
+                string errorMessage = null;
+                if (response.AirtableApiError is AirtableApiException)
+                {
+                    errorMessage = response.AirtableApiError.ErrorMessage;
+                }
+                else
+                {
+                    errorMessage = "Unknown error";
+                }
+                // Report errorMessage
             }
             else
             {
-                errorMessage = "Unknown error";
+                var record = response.Record;
+                // Do something with your created record.
+                UriHelper.NavigateTo("/AirTableFetch");
+
             }
+
+
+
         }
     }
+
 }
